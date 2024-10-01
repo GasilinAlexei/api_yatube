@@ -1,11 +1,12 @@
 from rest_framework import viewsets
 from rest_framework.exceptions import PermissionDenied
-from posts.models import Post, Group, Comment
-from .serializers import PostSerializer, GroupSerializer, CommentSerializer
 from rest_framework.permissions import (
     IsAuthenticatedOrReadOnly,
     IsAuthenticated
 )
+
+from posts.models import Post, Group, Comment
+from .serializers import PostSerializer, GroupSerializer, CommentSerializer
 
 
 class PostViewSet(viewsets.ModelViewSet):
@@ -53,19 +54,26 @@ class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
     permission_classes = [IsAuthenticatedOrReadOnly, IsAuthenticated]
 
+    def get_post(self):
+        """
+        Получение объекта поста по переданному post_id.
+        """
+        post_id = self.kwargs.get('post_id')
+        return Post.objects.get(id=post_id)
+
     def get_queryset(self):
         """
         Возвращение списка комментариев для конкретного поста.
         """
-        post_id = self.kwargs.get('post_id')
-        return Comment.objects.filter(post_id=post_id)
+        post = self.get_post()
+        return post.comments.all()
 
     def perform_create(self, serializer):
         """
         Создание комментария, связывая его с текущим пользователем и постом.
         """
-        post_id = self.kwargs.get('post_id')
-        serializer.save(author=self.request.user, post_id=post_id)
+        post = self.get_post()
+        serializer.save(author=self.request.user, post=post)
 
     def perform_update(self, serializer):
         """
