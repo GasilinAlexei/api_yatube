@@ -4,8 +4,9 @@ from rest_framework.permissions import (
     IsAuthenticatedOrReadOnly,
     IsAuthenticated
 )
+from django.shortcuts import get_object_or_404
 
-from posts.models import Post, Group, Comment
+from posts.models import Post, Group
 from .serializers import PostSerializer, GroupSerializer, CommentSerializer
 
 
@@ -50,7 +51,6 @@ class GroupViewSet(viewsets.ReadOnlyModelViewSet):
 
 class CommentViewSet(viewsets.ModelViewSet):
     """Управление комментариями."""
-    queryset = Comment.objects.all()
     serializer_class = CommentSerializer
     permission_classes = [IsAuthenticatedOrReadOnly, IsAuthenticated]
 
@@ -59,7 +59,7 @@ class CommentViewSet(viewsets.ModelViewSet):
         Получение объекта поста по переданному post_id.
         """
         post_id = self.kwargs.get('post_id')
-        return Post.objects.get(id=post_id)
+        return get_object_or_404(Post, id=post_id)
 
     def get_queryset(self):
         """
